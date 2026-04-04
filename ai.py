@@ -72,7 +72,12 @@ class AI:
             self.finished = True
             print("no path")
             return
+            
         current = self.frontier.pop()
+        
+        if current in self.explored:
+            return
+            
         self.explored.add(current)
 
         # Finishes search if we've found the goal.
@@ -85,11 +90,9 @@ class AI:
         self.grid.nodes[current].color_frontier = False
 
         for n in children:
-            if n[0] in range(self.grid.row_range) and n[1] in range(
-                self.grid.col_range
-            ):
+            if n[0] in range(self.grid.row_range) and n[1] in range(self.grid.col_range):
                 if not self.grid.nodes[n].puddle:
-                    if n not in self.explored and n not in self.frontier:
+                    if n not in self.explored:
                         self.previous[n] = current
                         self.frontier.append(n)
                         self.grid.nodes[n].color_frontier = True
