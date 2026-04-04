@@ -24,13 +24,21 @@ class AI:
         # Initialization of algorithms goes here
         if self.type == "dfs":
             self.frontier = [self.grid.start]
-            self.explored = []
+            self.explored = set()
         elif self.type == "bfs":
-            pass
+            self.frontier = [self.grid.start]
+            self.explored = set()
         elif self.type == "ucs":
-            pass
+            self.frontier = []
+            heappush(self.frontier, (0, self.grid.start))
+            self.explored = set()
+            self.costs = {self.grid.start: 0}
         elif self.type == "astar":
-            pass
+            self.frontier = []
+            h_cost = abs(self.grid.start[0] - self.grid.goal[0]) + abs(self.grid.start[1] - self.grid.goal[1])
+            heappush(self.frontier, (h_cost, 0, self.grid.start))
+            self.explored = set()
+            self.costs = {self.grid.start: 0}
 
     def get_result(self):
         total_cost = 0
@@ -65,6 +73,7 @@ class AI:
             print("no path")
             return
         current = self.frontier.pop()
+        self.explored.add(current)
 
         # Finishes search if we've found the goal.
         if current == self.grid.goal:
@@ -80,23 +89,110 @@ class AI:
                 self.grid.col_range
             ):
                 if not self.grid.nodes[n].puddle:
-                    self.previous[n] = current
-                    self.frontier.append(n)
-                    self.grid.nodes[n].color_frontier = True
+                    if n not in self.explored and n not in self.frontier:
+                        self.previous[n] = current
+                        self.frontier.append(n)
+                        self.grid.nodes[n].color_frontier = True
 
     # TODO: Implement BFS here (Don't forget to implement initialization in set_search function)
     def bfs_step(self):
-        self.failed = True
-        self.finished = True
+        if not self.frontier:
+            self.failed = True
+            self.finished = True
+            print("no path")
+            return
+        
+        current = self.frontier.pop(0)
+        self.explored.add(current)
+
+        if current == self.grid.goal:
+            self.finished = True
+            return
+
+        children = [(current[0] + a[0], current[1] + a[1]) for a in ACTIONS]
+        self.grid.nodes[current].color_checked = True
+        self.grid.nodes[current].color_frontier = False
+
+        for n in children:
+            if n[0] in range(self.grid.row_range) and n[1] in range(
+                self.grid.col_range
+            ):
+                if not self.grid.nodes[n].puddle:
+                    if n not in self.explored and n not in self.frontier:
+                        self.previous[n] = current
+                        self.frontier.append(n)
+                        self.grid.nodes[n].color_frontier = True
 
     # TODO: Implement UCS here (Don't forget to implement initialization in set_search function)
     # Hint: You can use heappop and heappush from the heapq library (imported for you above)
     def ucs_step(self):
-        self.failed = True
-        self.finished = True
+        if not self.frontier:
+            self.failed = True
+            self.finished = True
+            print("no path")
+            return
+        
+        current_cost, current = heappop(self.frontier)
+        
+        if current in self.explored:
+            return
+            
+        self.explored.add(current)
+
+        if current == self.grid.goal:
+            self.finished = True
+            return
+
+        children = [(current[0] + a[0], current[1] + a[1]) for a in ACTIONS]
+        self.grid.nodes[current].color_checked = True
+        self.grid.nodes[current].color_frontier = False
+
+        for n in children:
+            if n[0] in range(self.grid.row_range) and n[1] in range(self.grid.col_range):
+                if not self.grid.nodes[n].puddle:
+                    new_cost = current_cost + self.grid.nodes[n].cost()
+                    
+                    if n not in self.explored and (n not in self.costs or new_cost < self.costs[n]):
+                        self.costs[n] = new_cost
+                        self.previous[n] = current
+                        heappush(self.frontier, (new_cost, n))
+                        self.grid.nodes[n].color_frontier = True
 
     # TODO: Implement Astar here (Don't forget to implement initialization in set_search function)
     # Hint: You can use heappop and heappush from the heapq library (imported for you above)
     def astar_step(self):
-        self.failed = True
-        self.finished = True
+        if not self.frontier:
+            self.failed = True
+            self.finished = True
+            print("no path")
+            return
+        
+        current_f, current_cost, current = heappop(self.frontier)
+        
+        if current in self.explored:
+            return
+            
+        self.explored.add(current)
+
+        if current == self.grid.goal:
+            self.finished = True
+            return
+
+        children = [(current[0] + a[0], current[1] + a[1]) for a in ACTIONS]
+        self.grid.nodes[current].color_checked = True
+        self.grid.nodes[current].color_frontier = False
+
+        for n in children:
+            if n[0] in range(self.grid.row_range) and n[1] in range(self.grid.col_range):
+                if not self.grid.nodes[n].puddle:
+                    new_cost = current_cost + self.grid.nodes[n].cost()
+                    
+                    if n not in self.explored and (n not in self.costs or new_cost < self.costs[n]):
+                        self.costs[n] = new_cost
+                        self.previous[n] = current
+                        
+                        h_cost = abs(n[0] - self.grid.goal[0]) + abs(n[1] - self.grid.goal[1])
+                        f_cost = new_cost + h_cost
+                        
+                        heappush(self.frontier, (f_cost, new_cost, n))
+                        self.grid.nodes[n].color_frontier = True
