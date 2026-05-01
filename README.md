@@ -1,5 +1,25 @@
 # Assignment 1: Grid World
 
+> Original instructions: DO NOT FORK THIS REPO
+
+## My Implementation
+Implemented the following search algorithms in `ai.py`:
+
+### DFS (Depth-First Search)
+- Fixed the buggy implementation provided in the starter code
+
+### BFS (Breadth-First Search)
+- Explores nodes level by level using a queue
+
+### Uniform Cost Search (UCS)
+- Finds the lowest-cost path using a priority queue
+
+### A* Search
+- Uses Manhattan Distance as the heuristic for guided search
+
+### Test Results
+- Passed all given tests
+
 DO NOT FORK THIS REPO
 -----
 Clone it and work on it locally.
